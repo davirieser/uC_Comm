@@ -9,7 +9,7 @@
 g_pfnVectors:
     @ Non-configurable
     @ 0x00
-    .word _estack
+    .word _stack
     .word Reset_Handler
     .word NMI_Handler
     .word HardFault_Handler
@@ -74,23 +74,23 @@ g_pfnVectors:
 .weak Reset_Handler
 .type Reset_Handler, %function
 Reset_Handler:
-    ldr   r0, =_estack
-    mov   sp, r0          /* set stack pointer */
+    ldr   r0, = _stack  /* Load inital Stack-Pointer */
+    mov   sp, r0        /* Set Stack-Pointer */
 
     movs r3, #0
-    bl not_main
+    bl not_main         /* Jump to Main-Routine */
     b hang
 
 .size Reset_Handler, .-Reset_Handler
+
+_start:
+    bl Reset_Handler
 
 .section .text.Default_Handler,"ax",%progbits
 Default_Handler:
 Infinite_Loop:
     b Infinite_Loop
     .size Default_Handler, .-Default_Handler
-
-_start:
-    bl Reset_Handler
 
 /******************************************************************************/
 
@@ -103,19 +103,19 @@ hang:
 .thumb_func
 .globl dummy
 dummy:
-    bx lr
+    bx lr   /* Return from Subroutine */
 ;@-----------------------
 .thumb_func
 .globl INTERRUPTS
 INTERRUPTS:
-    CPSIE IF
-    BX LR
+    CPSIE IF /* Enable Interrupts */
+    BX LR    /* Return from Subroutine */
 ;@-----------------------
 .thumb_func
 .globl NO_INTERRUPTS
 NO_INTERRUPTS:
-    CPSID IF
-    BX LR
+    CPSID IF /* Disable Interrupts */
+    BX LR    /* Return from Subroutine */
 ;@-----------------------
 
 .align

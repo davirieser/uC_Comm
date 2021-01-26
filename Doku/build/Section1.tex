@@ -13,8 +13,10 @@ The MAX485 defines the Connection-Parameters of the USART :
 	\item 1 Stop-Bit
 	\item Odd-Parity
 \end{itemize}
-
+The Project should be written in C and then compiled using the arm-none-aebi Compiler for Programming using an CP2102.\\ \\
 The Project is available on \href{https://github.com/davirieser/uC_Comm}{GitHub}.
+
+\pagebreak
 
 \section{RS485}
 \label{sec:RS485}
@@ -22,11 +24,102 @@ The Project is available on \href{https://github.com/davirieser/uC_Comm}{GitHub}
 \subsection{Overview}
 \label{subsec:RS_Over}
 
-RS485 is a OSI-Layer 1 Protocol, this means it defines the Voltage-Levels and
-physical Capabilities for Protocols which rely on it.
+RS485 is a OSI-Layer 1 Interface, which uses balanced differential Voltages to transmit data.\\
+It specifies bidirectional, half-duplex data transmission with up to 32 Receivers and Transmitters each.\\
+RS485 requires Shielded Twisted Pair Cables with 120$\Omega$ line impedance and 120$\Omega$ Terminations at both ends of the line.\\
+No Maximum Bus Length is specified but it usually ends up at 1.2km at 200kbps or 50m at 10Mbps.\\
+RS485 can either be half-duplex using 2 differential ines or full-duplex using 2 sets of 2 differential lines.\\
+These 2 lines are called A and B but often called TX+/RX+/D+ and TX-/RX-/D- by manufacturers.
+
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{RS485BlockDia.png}
+	\caption{RS485 Block Diagram}
+	\begin{center}
+		\href{http://www.interfacebus.com/Design_Connector_RS485.html#d}{Source : intefacebus.com}
+	\end{center}
+	\label{fig:RS485BlockDia}
+\end{figure}
+
+\pagebreak
 
 \subsection{Functional Description}
 \label{subsec:RS_FuncDes}
 
+The Receivers has internal Pull-Up-, and Pull-Down-Resistor to keep the two differential lines U\textsubscript{+} and U\textsubscript{-} of the Receiver at a difference of about 200mV in the Idle-State.\\
+When a Transmitter wants to send Data they drive the difference between the
+two lines to more than 2V.\\
+In the following Picture you can see the Voltage Levels for RS485.
+These are differential so how much difference in Potential is between line A and line B.\\
+In the gray Area the Line is idle and no data is send.
+When a transmitter starts sending it shifts this difference into one of the green
+areas.\\
+If the Difference is in the top green area (A is greater than B) a Logic Low is send and if it is in the bottom green area (A is lower than B) a Logic High is send.\\
+
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{RS485IntefaceLevels.png}
+	\caption{RS485 Interface Voltage Levels}
+	\begin{center}
+		\href{http://www.interfacebus.com/Design_Connector_RS485.html#d}{Source : intefacebus.com}
+	\end{center}
+	\label{fig:RS485VolLevels}
+\end{figure}
+
+\pagebreak
+
+This Voltage difference is sampled as many times as defined by the Baudrate,
+includes a Start-Bit and may include a Stop-Bit.\\
+In the following Diagram an Example-Communication can be seen:
+
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{RS485WaveExample.png}
+	\caption{RS485 Example Communication}
+	\begin{center}
+		\href{https://en.wikipedia.org/wiki/RS-485#Waveform_example}{Source : Wikipedia}
+	\end{center}
+	\label{fig:RS485ExampComm}
+\end{figure}
+
+\subsection{Differences to RS422}
+\label{subsec:Diff422}
+
+RS422 is a pretty similar Interface to RS485 with the major difference being that there is no Enable-Line in the RS422 Interface.
+This means RS422 Circuits cannot be used in RS485 Circuit but RS485 Circuits can be used in RS422 Circuits.
+
+\pagebreak
+
 \subsection{Connection from STM32 to MAX485}
 \label{subsec:RS_Conn}
+
+The original Connection using the PC10 and PC11 Pins could not be accomplished because the USART3-Interface is not available on the STM32F030F4 because of it's smaller TSSOP20-Package.\\
+Because of this the Connection is established using the USART1-Interface with Pins PA9 and PA10.
+
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{STM32Cap.jpg}
+	\caption{STM32F030F4 Capabilities}
+	\begin{center}
+		\href{https://www.st.com/resource/en/datasheet/stm32f030rc.pdf}{Source : SMT32-Datasheet}
+	\end{center}
+	\label{fig:PackageCap}
+\end{figure}
+
+\begin{figure}
+	\includegraphics{STM32Pinout.jpg}
+	\caption{STM32F030F4P6 Pinout}
+	\begin{center}
+		\href{https://www.st.com/resource/en/datasheet/stm32f030rc.pdf}{Source : SMT32-Datasheet}
+	\end{center}
+	\label{fig:STM32Pinout}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{STM32DemoBoard.jpg}
+	\caption{STM32F030F4P6 Demo Board}
+	\begin{center}
+		\href{https://stm32-base.org/boards/STM32F030F4P6-STM32F030-DEMO-BOARD-V1.1}{Source : SMT32-Base}
+	\end{center}
+	\label{fig:DemoBoard}
+\end{figure}
+
+\pagebreak

@@ -5,8 +5,7 @@ MEMORY
     FLASH   (rx)    : ORIGIN = 0x08000000,   LENGTH = 16K
 }
 
-_estack = ORIGIN(RAM) + LENGTH(RAM);
-_stack = _estack;
+_stack = ORIGIN(RAM) + LENGTH(RAM);
 
 SECTIONS
 {

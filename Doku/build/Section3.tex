@@ -1,0 +1,19 @@
+\section{Interrupt Service Routine Setup}
+
+\subsection{Reset Handler}
+
+The Reset-Handler is defined in the Assembler-File and is a Non-Maskable Interrupt with the lowest Priority of all Interrupts.
+Low Priority in this case means it will override Interrupts with higher Priority.\\
+During Reset the Stack-Pointer has to be reset and then the main-Routine from main.c has to be called.
+
+\lstinputlisting[caption=Assembler Script,language=Assembler,firstline=73,lastline=84]{../../startup.S}
+
+\subsection{Interrupt Service Routine Definitions}
+
+At the End of the Assembler-File are ".weak"-Definitions which are basically Prototypes for Functions which should be defined by other Parts of the Code.
+
+\lstinputlisting[caption=Assembler Script,language=Assembler,firstline=259,lastline=263]{../../startup.S}
+
+The "hang"-Function puts the STM32F030F4 into an endless loop. This is intentional to indicate that an unknown Error has occurred because "hang" should never be called.
+
+\lstinputlisting[caption=Assembler Script,language=Assembler,firstline=97,lastline=99]{../../startup.S}

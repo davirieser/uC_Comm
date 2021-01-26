@@ -1,0 +1,58 @@
+\section{References}
+\label{sec:References}
+
+\subsection{Additional Links}
+
+\begin{itemize}
+	\item \href{https://www.st.com/en/microcontrollers-microprocessors/stm32f030f4.html#documentation}{Official STM32F030F4 Documentation}
+	\item \href{https://github.com/dwelch67/stm32_samples/blob/master/STM32F030F4P6}{Independent STM32F030F4 Github Project}
+	\item \href{https://stm32-base.org/boards/STM32F030F4P6-STM32F030-DEMO-BOARD-V1.1}{SMT32-Demo-Board Doku} which is available on \href{https://www.amazon.de/gp/product/B07JLD4M8K/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1}{Amazon}
+	\item \href{http://osr507doc.sco.com/en/tools/ld_cmd_lang_sections.html#ld_cmd_lang_sections_grouping}{Linker Commands}
+\end{itemize}
+
+
+\subsection{Vector Table}
+\label{fig:VecTab}
+
+Here you can see the full Vector Table from the \href{https://www.st.com/resource/en/reference_manual/dm00091010-stm32f030x4x6x8xc-and-stm32f070x6xb-advanced-armbased-32bit-mcus-stmicroelectronics.pdf}{STM32F030F4 Refence Manual}
+
+\begin{figure}
+	\includegraphics{VectorTable1.jpg}
+	\caption{First Part of the Vector Table}
+	\label{fig:VecTab1}
+\end{figure}
+
+\begin{figure}
+	\includegraphics{VectorTable2.jpg}
+	\caption{Second Part of the Vector Table}
+	\label{fig:VecTab2}
+\end{figure}
+
+\subsection{Complete Code}
+\label{subsec:CompCodeRef}
+
+\subsubsection{Linker Script}
+\label{subsec:LinkerRef}
+
+\lstinputlisting[caption=Linker Script,language=LinkerScript]{../../startup.ld}
+
+\pagebreak
+
+\subsubsection{Assembler Script}
+\label{subsec:AssemblerRef}
+
+\lstinputlisting[caption=Assembler Script,language=Assembler]{../../startup.S}
+
+\pagebreak
+
+\subsubsection{Header File}
+\label{subsec:HeaderRef}
+
+\lstinputlisting[caption=Header File,language=Clang]{../../main.h}
+
+\pagebreak
+
+\subsubsection{Program Code}
+\label{sec:ProgCodeRef}
+
+\lstinputlisting[caption=Program Code,language=Clang]{../../main.c}

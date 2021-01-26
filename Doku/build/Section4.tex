@@ -1,25 +1,46 @@
-\section{References}
-\label{sec:References}
 
-\subsection{Complete Code}
-\label{subsec:CompCode}
+\section{Header File}
 
-\subsubsection{Linker Script}
-\label{subsec:Linker}
+The Header-File defines a lot of Macros to create more readable and flexible Code.\\
+Macros are Key-Value-Pairs that are substited by the C-Preprocessor :
 
-\lstinputlisting[caption=Linker Script,language=LinkerScript]{../../startup.ld}
+\begin{lstlisting}[language=Clang,caption=Macro Defintion Example]
+#define MACRO-NAME VALUE
+#define REG_POINTER 0x40000000
+#define ADD(a,b) (a + b)
 
-\subsubsection{Assembler Script}
-\label{subsec:Assembler}
+int x = VALUE;
+int reg = REG_POINTER;
+int result = ADD(x,REG_POINTER);
+\end{lstlisting}
+\vspace{-25px}
+\begin{center}
+	\Large compiles to:
+\end{center}
+\begin{lstlisting}[language=Clang,caption=Substitued Values]
+int x = WERT;
+int reg = 0x40000000;
+int result = (x + 0x40000000);
+\end{lstlisting}
 
-\lstinputlisting[caption=Assembler Script,language=Assembler]{../../startup.S}
+\subsection{Address and Register Substitution}
 
-\subsubsection{Header File}
-\label{subsec:Header}
+The Header File defines the Addresses of Component-Registers in the Header-File for more Flexibality in the case of a Hardware-Swap.
+See full Code at \nameref{subsec:HeaderRef}
 
-\lstinputlisting[caption=Header File,language=Clang]{../../main.h}
+\lstinputlisting[caption=Header~File~Address~Definitions~for~Clock-Registers,language=Clang,firstline=80,lastline=90]{../../main.h}
 
-\subsubsection{Program Code}
-\label{sec:ProgCode}
+\subsection{Interrupt-Enable and Interrupt-Disable}
 
-\lstinputlisting[caption=Program Code,language=Clang]{../../main.c}
+The "CPSIE"-, and "CPSID"-Assembler-Instructions which can Enable and Disable Interrupts (except Non-Maskable-Interrupts) are defined in the Assembler-Script and then imported in the Header-File.
+
+\lstinputlisting[caption=Header~File~Prototypes,language=Clang,firstline=6,lastline=8]{../../main.h}
+
+\lstinputlisting[caption=Assembler~Function~Definition,language=Assembler,firstline=107,lastline=119]{../../startup.S}
+
+\subsection{Register Macros}
+
+The Header File defines multiple Macro-Functions for Register-Access to increase Readability.\\
+Here an Examle of Functions to Read/Write to Register using Bitmasks :
+
+\lstinputlisting[caption=Header~File~Prototypes,language=Clang,firstline=47,lastline=54]{../../main.h}

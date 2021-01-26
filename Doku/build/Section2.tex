@@ -1,1 +1,37 @@
-\section{Code}
+\section{Memory Setup}
+
+\subsection{Linker Script}
+
+\label{sec:LinkerScript}
+
+The first Step of the Code is the Linker Script which tells the Linker how to
+assemble the Binary-File which will be programmed to the STM32F030F4.\\
+The following Listing shows the final Code for the Linker Sript:
+
+\lstinputlisting[caption=Linker Script,language=LinkerScript]{../../startup.ld}
+
+\hspace{-15px}"MEMORY" declares the Memory Regions which should be present after programming.
+These Memory Regions have several Attributes like a Origin=Start-Address,Length,Readability(r),Writability(w) and Executability(x).\\ \\
+The "\_stack"-Symbol defines the Base-Pointer for the Stack so it can be used in the Assembler Script to reset the Stack-Pointer during Reset. See \nameref{sec:VecTabSetup}\\ \\
+"SECTIONS" tells the linker where to place the Sections of Codes.
+\begin{itemize}
+	\item ".text" is the Code Memory (Instructions) and is placed in the Flash.
+	\item ".rodata" are Constants and placed in FLASH
+	\item ".data" are Variables which are initially assigned a Value not equal 0.
+	\item ".bss" are Variables which are initially assigned 0 .
+\end{itemize}
+More can be read at \\ \url{https://home.cs.colorado.edu/~main/cs1300/doc/gnu/ld_3.html#SEC17}
+
+\pagebreak
+
+\subsection{Vector Table Setup}
+\label{sec:VecTabSetup}
+
+The Vector Table is set up in the \nameref{subsec:AssemblerRef} and starts at Memory-Address 4 (Address 0 is occupied by the 4 Byte long Stack Pointer).\\
+The Vector Table consists of Addresses which are 4 Bytes long and are loaded into the Program-Counter in the Event that an Interrupt is triggered.\\
+See complete \nameref{fig:VecTab}\\
+For the complete Code see Section \nameref{subsec:LinkerRef}.
+
+\lstinputlisting[caption=Assembler Script,language=Assembler,firstline=9,lastline=20]{../../startup.S}
+
+\pagebreak
