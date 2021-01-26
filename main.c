@@ -2,7 +2,8 @@
 
 int not_main(void);
 
-uint8_t buffer_size = 0;
+uint32_t data_packets_rem = 0;
+uint32_t buffer_size = 0;
 uint8_t * write_buffer;
 
 int not_main(void) {
@@ -34,9 +35,11 @@ void setup_registers(void) {
     setup_usart();
     setup_user_led();
     setup_interrupt();
-    setup_adc();
 
     INTERRUPTS();
+
+    // Starts using Interrupt
+    setup_adc();
 
 }
 
@@ -223,7 +226,7 @@ void setup_usart(void){
     // usart_cr1[PEIE] = 0; // Bit 8 // Parity Error Interrupt Enable
     // usart_cr1[TXIEIE] = 0; // Bit 7 // Transmit Buffer Empty Interrupt Enable
     // usart_cr1[TCIE] = 0; // Bit 6 // Transmission Complete Interrupt Enable = TC
-    // usart_cr1[RXNEIE] = 1; // Bit 5 // Enable Interrupt on Receive-Data available = RXNE
+    // usart_cr1[RXNEIE] = 0; // Bit 5 // Enable Interrupt on Receive-Data available = RXNE
     // usart_cr1[IDLEIE] = 0; // Bit 4 // IDLE Interrupt Enable
     // usart_cr1[TE] = 1; // Bit 3 // Enable Transmitter
     // usart_cr1[RE] = 1; // Bit 2 // Enable Receiver
@@ -291,9 +294,9 @@ void setup_adc() {
     );
     SET_BIT(adc_cfgr1,(3<<12));
 
-    // Enable End-Of-Conversion-Interrupt and ADC-Ready-Interrupt of ADC
+    // Enable ADC-Ready-Interrupt of ADC
     CLEAR_BIT(adc_ier,0x9F);
-    SET_BIT(adc_ier,0x05);
+    SET_BIT(adc_ier,0x01);
 
     //Set ADC Channel to channel 0 because PA0 is ADC_IN0
     CLEAR_BIT(adc_chselr,0x0001FFFF);
@@ -367,17 +370,17 @@ void setup_interrupt(void) {
 
 void write_to_user_led(uint32_t mode) {
 
-    uint8_t * LED_ON = (uint8_t * )"Turning LED on\r\n";
-    uint8_t * LED_OFF = (uint8_t *)"Turning LED off\r\n";
+    // uint8_t * LED_ON = (uint8_t * )"Turning LED on\r\n";
+    // uint8_t * LED_OFF = (uint8_t *)"Turning LED off\r\n";
 
     uint32_t led_register = REGISTER_GPIO_A_START + GPIO_ODR_REGISTER_OFFSET;
 
     // Write the mode negated because the LED is on when the Pin is low and off when the pin is low
     if (CHECK_BIT(mode,0) == 0x01){
-        write_to_usart(LED_OFF);
+        // write_to_usart(LED_OFF);
         CLEAR_BIT(led_register,1 << USER_LED_PIN_NUMBER);
     }else{
-        write_to_usart(LED_ON);
+        // write_to_usart(LED_ON);
         SET_BIT(led_register,1 << USER_LED_PIN_NUMBER);
     }
 
@@ -680,17 +683,9 @@ void USART1_IRQHandler(void) {
     NO_INTERRUPTS();
 
     // Identify Interrupt in USART-Terminal
-    // int_id = "USART-INT\r\n"
-    uint8_t int_id[] = {0x55,0x53,0x41,0x52,0x54,0x2D,0x49,0x4E,0x54,0x0D,0x0A,0x0};
+    uint8_t * int_id = (uint8_t * ) "USART-INT\r\n";
 
     write_to_usart(int_id);
-
-    write_to_usart((uint8_t * ) "ADC_CR-Reg:\r\n");
-
-    write_int_hex_to_usart(READ_REG(ADC_BASE_REG + ADC_CR));
-
-    write_bit_to_usart(0x0A);
-    write_bit_to_usart(0x0D);
 
     // Actual Interrupt Service Routine
 
@@ -701,22 +696,17 @@ void USART1_IRQHandler(void) {
     // Find out which Interrupt was triggered
     if ((int_register & USART_READ_DATA_NE) != 0){
 
+        // Clear RXNE-Bit
         int_register = read_from_usart();
+
+        // Increment Data-Packets to be sent and enable Interrupt
+        data_packets_rem = DATA_PACKETS_PER_REQUEST;
+        ENABLE_ADC_EOC_INT;
 
         // Could be included for Safety Purposes
         // Discards Read-Buffer and clears Interrupt-Flag
         // USART_FLUSH_READ_REG;
         // CLEAR_USART_RXNE_FLAG;
-
-        write_int_bin_to_usart(int_register);
-        write_bit_to_usart(CARRIAGE_RT);
-        write_bit_to_usart(NEWLINE);
-
-        write_int_hex_to_usart(int_register);
-        write_bit_to_usart(CARRIAGE_RT);
-        write_bit_to_usart(NEWLINE);
-        write_bit_to_usart(CARRIAGE_RT);
-        write_bit_to_usart(NEWLINE);
 
     }else if((int_register & USART_TRANS_REG_EMPTY) != 0){
 
@@ -729,6 +719,7 @@ void USART1_IRQHandler(void) {
             CLEAR_USART_TXE_FLAG;
         }else{
             DISABLE_TXE_INT;
+            ENABLE_TC_INT;
             CLEAR_USART_TXE_FLAG;
         }
 
@@ -759,42 +750,46 @@ void ADC1_IRQHandler(){
 
     write_to_usart(int_id);
 
-    uint8_t * prefix = (uint8_t * ) "ADC-Value : ";
-
     uint32_t adc_ier = ADC_BASE_REG + ADC_IER;
     uint32_t adc_isr = ADC_BASE_REG + ADC_ISR;
     uint32_t adc_cr = ADC_BASE_REG + ADC_CR;
     uint32_t adc_dr = ADC_BASE_REG + ADC_DR;
 
-    unsigned int ra;
-
-    for(ra=0;ra<50000;ra++) dummy(ra);
-    // Toggle User-LED
-    write_to_user_led(~read_from_user_led());
-
-    // uint32_t ADC_Value;
     uint32_t REG_CONTENT = READ_REG(adc_isr);
 
     // ADC is ready
-    if((REG_CONTENT & ADC_ISR_ADRDY) == ADC_ISR_ADRDY){
+    if(((REG_CONTENT & ADC_ISR_ADRDY) == ADC_ISR_ADRDY) & (READ_BIT(adc_ier,0x01))){
+        write_to_usart((uint8_t * ) "ADC-Initialization Complete\r\n");
         // Start Conversion
         SET_BIT(adc_cr,ADC_CR_ADSTART);
         // Disable ADC-Ready-Interrupt
         CLEAR_BIT(adc_ier,0x01);
     }
     // End of Conversion
-    if((REG_CONTENT & ADC_ISR_EOC) == ADC_ISR_EOC){
-        // Send Message at the Start
-        write_to_usart(prefix);
-        // Read ADC-Value and send it in Hex
-        REG_CONTENT = (READ_REG(adc_dr) & 0xFFFF);
-        write_int_hex_to_usart(REG_CONTENT);
-        // Send Newline and Carriage-Return
-        write_bit_to_usart(NEWLINE);
-        write_bit_to_usart(CARRIAGE_RT);
+    else if((REG_CONTENT & ADC_ISR_EOC) == ADC_ISR_EOC){
+        if (data_packets_rem > 0){
+            // Send Message at the Start
+            write_to_usart((uint8_t * ) "ADC-Value : ");
+            // Read ADC-Value and send it in Hex
+            REG_CONTENT = (READ_REG(adc_dr) & 0xFFFF);
+            write_int_hex_to_usart(REG_CONTENT);
+            // Send Newline and Carriage-Return
+            write_bit_to_usart(NEWLINE);
+            write_bit_to_usart(CARRIAGE_RT);
+            // Decrement Data Packets remaining
+            data_packets_rem --;
+            write_int_hex_to_usart(data_packets_rem);
+            // Send Newline and Carriage-Return
+            write_bit_to_usart(NEWLINE);
+            write_bit_to_usart(CARRIAGE_RT);
+        }else{
+            DISABLE_ADC_EOC_INT;
+            write_bit_to_usart(NEWLINE);
+            write_bit_to_usart(CARRIAGE_RT);
+        }
+    }else{
+        DISABLE_ADC_EOC_INT;
     }
-
-    return;
 
     INTERRUPTS();
 
