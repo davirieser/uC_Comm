@@ -12,5 +12,5 @@ SECTIONS
     .text : { *(.text*) } > FLASH
     .rodata : { *(.rodata*) } > FLASH
     .data : { *(.data*) } > RAM
-    .bss : { *(.bss*) } > RAM
+    .bss : { *(.bss*) *(COMMON) } > RAM
 }
