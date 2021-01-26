@@ -1,0 +1,108 @@
+\documentclass[12pt,a4paper,fleqn,leqno,openany]{article}
+
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+
+% ------------------------------------------------------------------------------
+
+\newcommand{\Schueler}{David Rieser}
+\newcommand{\Lehrer}{Betreuer}
+\newcommand{\Uebungsname}{Vorlage} % Name von der Uebung
+\newcommand{\ToC}{true} % Table Of Contents - Inhaltsverzeichnis
+\newcommand{\LoF}{true} % List Of Figures - Abbildverzeichnis
+\newcommand{\LoL}{true} % List Of Listings - Codeverzeichnis
+
+% ------------------------------------------------------------------------------
+
+% \begin{figure}[ht]
+% 	\centering
+% 	\includegraphics[width=0.8\textwidth]{Berechnung2.jpg}
+% 	\caption{Berechnung Teil 2}
+% \end{figure}
+
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
+
+\pagestyle{fancy}
+\fancyhf{}
+
+\title{\Uebungsname}
+\author{\Schueler\\Betreuer~:~\Lehrer}
+\rhead{5BHEL}
+\lhead{\Uebungsname}
+\rfoot{Page~\thepage ~of~\pageref{LastPage}}
+\lfoot{HTL-Anichstrasse}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+
+\graphicspath{{Pictures/}}
+
+\newcommand{\true}{true}
+
+\lstset{
+	alsoletter=-;
+	showtabs=true,
+	showstringspaces=false,
+    breaklines=true,
+	numbers=left,
+    frame=trBL,
+	stepnumber=1,
+	numbersep=10pt,
+	tab=,
+	numberstyle=\tiny,
+	tabsize=4,
+	emph={[1]Keyword},
+	emphstyle={[1]\color{orange}},
+	morecomment=[l][\color{lightgray}]{\\\\},
+	morecomment=[l][\color{lightgray}]{//},
+	morecomment=[l][\color{lightgray}]{\%},
+	morecomment=[s][\color{lightgray}]{/*}{*/},
+	morecomment=[s][\color{lightgray}]{\\*}{*\\},
+	morestring=[s][\color{orange}]{\$}{\$},
+	classoffset=0,
+	keywordstyle=\color{purple},
+	morekeywords={fn,main,def,return,break},
+	sensitive=false
+}
+
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\begin{titlepage}
+	\maketitle
+\end{titlepage}
+
+\pagebreak
+
+\thispagestyle{empty}
+\ifx\ToC\true
+	\renewcommand\contentsname{Inhaltsverzeichnis}
+	\tableofcontents
+\fi
+\ifx\LoF\true
+	\let\oldnumberline\numberline
+	\renewcommand{\numberline}[1]{\hspace*{-1.5em}} % Remove number argument
+	\renewcommand\listfigurename{Abbildungsverzeichnis}
+	\listoffigures
+	\let\numberline\oldnumberline
+\fi
+\ifx\LoL\true
+	\renewcommand\lstlistlistingname{Codeverzeichnis}
+	\lstlistoflistings
+\fi
+
+\pagebreak
+
+\pagenumbering{arabic}
+
+\input{build/Section1}
+
+\end{document}
