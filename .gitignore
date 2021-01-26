@@ -13,6 +13,8 @@
 **/*.log
 **/*.lof
 **/*.toc
+**/*.pdf
+*.pdf
 
 # Ignore Pictures
 **/*.jpg

@@ -1,5 +1,7 @@
 \documentclass[12pt,a4paper,fleqn,leqno,openany]{article}
 
+% Package Imports --------------------------------------------------------------
+
 \usepackage{tikz}
 \usepackage{tcolorbox}
 \usepackage{graphicx}
@@ -7,95 +9,199 @@
 \usepackage{xcolor}
 \usepackage{lastpage}
 \usepackage{fancyhdr}
+\usepackage{hyperref}
 
-% ------------------------------------------------------------------------------
+% Parameter Setup --------------------------------------------------------------
 
+% Define Constant "true"
+\newcommand{\true}{true}
+
+% Define automatically filled in Information
 \newcommand{\Schueler}{David Rieser}
-\newcommand{\Lehrer}{Betreuer}
-\newcommand{\Uebungsname}{Vorlage} % Name von der Uebung
+\newcommand{\Lehrer}{Prof. Roland Richard Lezou}
+\newcommand{\Uebungsname}{Micro-Controller-Communication} % Name von der Uebung
 \newcommand{\ToC}{true} % Table Of Contents - Inhaltsverzeichnis
 \newcommand{\LoF}{true} % List Of Figures - Abbildverzeichnis
 \newcommand{\LoL}{true} % List Of Listings - Codeverzeichnis
 
-% ------------------------------------------------------------------------------
-
-% \begin{figure}[ht]
-% 	\centering
-% 	\includegraphics[width=0.8\textwidth]{Berechnung2.jpg}
-% 	\caption{Berechnung Teil 2}
-% \end{figure}
-
-% ------------------------------------------------------------------------------
-% ------------------------------------------------------------------------------
-% ------------------------------------------------------------------------------
-
+% Title, Header and Footer Setup -----------------------------------------------
 \pagestyle{fancy}
 \fancyhf{}
 
+% Define Title-Page
 \title{\Uebungsname}
 \author{\Schueler\\Betreuer~:~\Lehrer}
+% \date{} % When left out fills in current Date automatically
+
+% Define Header and Footer Text
 \rhead{5BHEL}
 \lhead{\Uebungsname}
 \rfoot{Page~\thepage ~of~\pageref{LastPage}}
 \lfoot{HTL-Anichstrasse}
+
+% Add Lines under the Header and over the Footer
 \renewcommand{\headrulewidth}{1pt}
 \renewcommand{\footrulewidth}{1pt}
 
+% Graphics Setup ---------------------------------------------------------------
+
 \graphicspath{{Pictures/}}
 
-\newcommand{\true}{true}
+% Example Picture
+%
+% \begin{figure}[ht]
+% 	\centering
+% 	\includegraphics[width=0.8\textwidth]{Bild.jpg}
+% 	\caption{Bildbeschreibung}
+%	\label{fig:Bildamrker}
+% \end{figure}
+%
+% Link to Picture
+%
+% \ref{Referenz:Bild}
+
+% Listings Setup ---------------------------------------------------------------
 
 \lstset{
-	alsoletter=-;
-	showtabs=true,
-	showstringspaces=false,
+	alsoletter=-,
+    basicstyle=\footnotesize\ttfamily,
     breaklines=true,
-	numbers=left,
+	captionpos=b,
+	columns=fullflexible,
     frame=trBL,
-	stepnumber=1,
+	language=C,
+	numbers=left,
 	numbersep=10pt,
-	tab=,
 	numberstyle=\tiny,
+	showstringspaces=false,
+	showtabs=true,
+	stepnumber=1,
+	tab=,
 	tabsize=4,
-	emph={[1]Keyword},
-	emphstyle={[1]\color{orange}},
+	title=\lstname,
+	% Define Comments
+    commentstyle=\color{lightgray},
 	morecomment=[l][\color{lightgray}]{\\\\},
 	morecomment=[l][\color{lightgray}]{//},
 	morecomment=[l][\color{lightgray}]{\%},
 	morecomment=[s][\color{lightgray}]{/*}{*/},
 	morecomment=[s][\color{lightgray}]{\\*}{*\\},
-	morestring=[s][\color{orange}]{\$}{\$},
-	classoffset=0,
-	keywordstyle=\color{purple},
-	morekeywords={fn,main,def,return,break},
-	sensitive=false
+	% Define Strings
+	stringstyle=\color{orange},
+	morestring=[s][\color{orange}]{\$}{\$}
 }
 
+\lstdefinelanguage{LinkerScript}{
+	keywords={MEMORY,LENGTH,ORIGIN,SECTIONS},
+	keywordstyle=\color{blue}\bfseries,
+	ndkeywords={FLASH,RAM},
+	ndkeywordstyle=\color{red}\bfseries,
+	identifierstyle=\color{black},
+	sensitive=false,
+ 	morestring=[s]{*(}{*)},
+ 	morestring=[s]{.}{:},
+	stringstyle=\color{orange}
+}
+
+\lstdefinelanguage{Assembler}{
+	keywords={word,global,globl,thumb,weak,thumb_set,thumb_func,end,syntax,cpu},
+	keywordstyle=\color{blue}\bfseries,
+	ndkeywords={b,bl,bx,mov,movs,CPSIE,CPSID},
+	ndkeywordstyle=\color{red}\bfseries,
+	identifierstyle=\color{black},
+	sensitive=false,
+	stringstyle=\color{orange}
+}
+
+\lstdefinelanguage{Clang}{
+	keywords={include,define,SET_BIT,CLEAR_BIT,WRITE_REG,READ_REG,INTERRUPTS,NO_INTERRUPTS,CHECK_BIT,READ_BIT,WRITE_BIT,CHECK_BIT_MASK,while,for,if,return,write_to_usart,write_bit_to_usart,write_int_bin_to_usart,write_int_hex_to_usart,else},
+	keywordstyle=\color{blue}\bfseries,
+	ndkeywords={void,uint32_t,uint8_t,int,volatile,char,CARRIAGE_RT,NEWLINE,ifndef,endif,elif},
+	ndkeywordstyle=\color{red}\bfseries,
+	identifierstyle=\color{black},
+	sensitive=false,
+	stringstyle=\color{orange}
+}
+
+% Example Listing
+%
+% \begin{lstlisting}[Options]
+%	Code
+% \end{lstlisting}
+%
+% Example File Import
+%
+% \lstinputlisting[Options]{filename}
+%
+% Define New Language
+%
+% \lstdefinelanguage{JavaScript}{
+%   keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+%   keywordstyle=\color{blue}\bfseries,
+%   ndkeywords={class, export, boolean, throw, implements, import, this},
+%   ndkeywordstyle=\color{darkgray}\bfseries,
+%   identifierstyle=\color{black},
+%   sensitive=false,
+%   comment=[l]{//},
+%   morecomment=[s]{/*}{*/},
+%   commentstyle=\color{purple}\ttfamily,
+%   stringstyle=\color{red}\ttfamily,
+%   morestring=[b]',
+%   morestring=[b]"
+% }
+
+% Hyperlink Setup --------------------------------------------------------------
+
+\urlstyle{same}
+\hypersetup{
+    colorlinks=true,	% Enable Link-Colors
+    linkcolor=blue, 	% Color of Internal-Document-Links
+    filecolor=magenta, 	% Color of Local-File-Links
+    urlcolor=cyan, 		% Color of URL-Links
+}
+
+% Hyperref Setup
+%
+% \label{Marker} 			% To setup the Marker
+%
+% \url{url}					% Clickable URL
+% \href{url}{Link-Text}		% Clickable Text leading to URL
+% \ref{Marker}				% To reference the Marker (Returns Number)
+% \pageref{Marker}			% To reference the Marker (Returns Number)
+% \nameref{Marker}			% To reference the Marker (Returns Name)
+
+% ------------------------------------------------------------------------------
+% Document Start ---------------------------------------------------------------
+% ------------------------------------------------------------------------------
 
 \begin{document}
 
+% Disable Pagenumbering for Titlepage and Table of Contents
 \pagenumbering{gobble}
 
+% Create Title-Page
 \begin{titlepage}
 	\maketitle
 \end{titlepage}
 
 \pagebreak
 
+% Remove Header and Footer for Table of Contents
 \thispagestyle{empty}
+
 \ifx\ToC\true
-	\renewcommand\contentsname{Inhaltsverzeichnis}
+	\renewcommand\contentsname{Table of Contents}
 	\tableofcontents
 \fi
 \ifx\LoF\true
 	\let\oldnumberline\numberline
-	\renewcommand{\numberline}[1]{\hspace*{-1.5em}} % Remove number argument
-	\renewcommand\listfigurename{Abbildungsverzeichnis}
+	\renewcommand{\numberline}[1]{\hspace*{-1.5em}}
+	\renewcommand\listfigurename{Table of Figures}
 	\listoffigures
 	\let\numberline\oldnumberline
 \fi
 \ifx\LoL\true
-	\renewcommand\lstlistlistingname{Codeverzeichnis}
+	\renewcommand\lstlistlistingname{List of Listings}
 	\lstlistoflistings
 \fi
 
@@ -103,6 +209,9 @@
 
 \pagenumbering{arabic}
 
-\input{build/Section1}
+\input{build/Section1.tex}
+\input{build/Section2.tex}
+\input{build/Section3.tex}
+\input{build/Section4.tex}
 
 \end{document}

@@ -9,8 +9,6 @@ int not_main(void) {
 
     setup_registers();
 
-    setup_adc();
-
     unsigned int ra = 0;
 
     // Wait For Interrupt in an endless Loop
@@ -36,6 +34,7 @@ void setup_registers(void) {
     setup_usart();
     setup_user_led();
     setup_interrupt();
+    setup_adc();
 
     INTERRUPTS();
 
