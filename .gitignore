@@ -1,0 +1,19 @@
+# Ignore Generated Files by GCC
+**/*.elf
+**/*.list
+**/*.o
+*.out
+**/*.out
+*.bin
+**/*.bin
+
+# Ignore Generated Files by LaTeX
+**/*.aux
+**/*.lol
+**/*.log
+**/*.lof
+**/*.toc
+
+# Ignore Pictures
+**/*.jpg
+**/*.png
