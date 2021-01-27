@@ -14,6 +14,8 @@ all: main.pdf
 
 main.pdf : $(wildcard *.tex) $(wildcard */*.tex)
 	$(LATEX_COMPILER) $(COMPILE_OPTIONS) main.tex
+	# Compile twice to resolve Cross-Refernces
+	$(LATEX_COMPILER) $(COMPILE_OPTIONS) main.tex
 	mv $(OUTPUT_DIR)main.pdf main.pdf
 
 .PHONY: clean

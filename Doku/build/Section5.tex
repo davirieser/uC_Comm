@@ -1,18 +1,104 @@
-
 \section{Program Code}
 
 \subsection{Clock Initialization}
 
-\subsection{Pin Setup}
+The Clock is setup in the simplest way possible by funneling the High Speed Internal (HSI) Clock through to the USART,ADC and GPIO Pins.
 
-\subsection{Interrupt Setup}
+\begin{figure}[!ht]
+	\includegraphics[width=\linewidth]{ClockTree.jpg}
+	\caption{Clock Tree}
+\end{figure}
+
+\pagebreak
+
+The HSI-Clock is a built-in RC-Oscilllator with a frequency of 8MHz.\\
+See Register Definition in Refence \nameref{ClockReg}.
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=118,lastline=145]{../../main.c}
+
+\pagebreak
+
+\subsection{Pin Setup for USART}
+
+The GPIO-Pins PA9 and PA10 have to be setup with Alternate Function 1 so they are designated as the RX and TX Pins of the USART1-Component.\\
+See Register Definition and Alternate Function Description in Refence \nameref{GpioReg}.
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=46,lastline=116]{../../main.c}
+
+\pagebreak
 
 \subsection{USART Initialization}
 
+The USART-Setup consists of :
+\begin{itemize}
+	\item Disabling the USART
+	\item Setting Baudrate (See \nameref{fig:USARTBRGen})
+	\item Setting Word-Length,Stop-Bits and Parity
+	\item Enabling Transmitter and Receiver
+	\item Enabling USART
+	\item Enabling Interrupts
+\end{itemize}
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=147,lastline=245]{../../main.c}
+
+\pagebreak
+
 \subsection{ADC Initialization}
+
+The ADC Setup is the trickiest because pretty much every step of the process requires that all Bits in the ADC\_CR-Register are cleared.
+That means that after every Step you have wait until the Bits of the previous Step are cleared.\\
+A pin also has to be setup as an Anlog Pin for the ADC to measure.\\ \\
+The ADC-Setup consists of :
+\begin{itemize}
+	\item Disable the ADC
+	\item Calibrating the ADC-Refernce-Voltage
+	\item Configure ADC-Clock
+	\item Enabling Interrupts
+	\item Selecting ADC-Channel
+	\item Enable ADC
+\end{itemize}
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=247,lastline=316]{../../main.c}
+
+\pagebreak
 
 \subsection{NVIC Initialization}
 
+Interrupts have to be enabled in the NVIC-Component.
+This is done in the Interrupt-Enable-Register by setting the Bit which is equivalent to the Interrupt Number in the \nameref{fig:VecTab} (Bit 12 for ADC and Bit 27 for USART).
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=358,lastline=369]{../../main.c}
+
+\pagebreak
+
+\subsection{Basic Functionality of USART Read and Write}
+
+To Read or Write using the USART you have to check that the USART is ready.
+During Writing this means that you have to check that the Transmit-Data-Register-Empty-Bit(TXE) in the ISR-Register is set, indicating that it can be written to. Writing to the Transmit Data Register then clears the TXE-Flag and starts sending the Data.After a Transmission is complete the TC-Flag should be checked to ensure that the Data was send.\\
+During Reading this means that you have to check that the Read-Data-Register-Not-Empty-Bit(RXNE) in the ISR-Register is set, indicating that data was received and is now strored in the Read-Data-Register. Reading from the Read-Data-Register then clears the RXNE-Flag.
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=398,lastline=448]{../../main.c}
+
+\pagebreak
+
 \subsection{USART-Interrupt}
 
+The USART-Interrupt has to check which Interrupt has occured using the ISR-Register.\\
+If the Read-Data-Not-Empty-Flag is set the USART tells the ADC that it schould send data by changing a global Variable that indicates how many Packets should be sent and enabling the ADC-EOC-Interrupt.\\
+See \nameref{sec:ADCInt}
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=680,lastline=743]{../../main.c}
+
+\pagebreak
+
 \subsection{ADC-Interrupt}
+\label{sec:ADCInt}
+
+The ADC-Interrupt handles the ADC-Ready-, and End-Of-Conversion-Interrupt.\\
+The ADC-Ready-Interrupt disables the ADC-Ready-Interrupt and then tells the ADC to start converting.\\
+If the End-of-Conversion-Interrupt is triggered, it indicates that it was enabled by the USART-Interrupt. This means that the ADC-Data should be sent over the USART.
+This happens until the "data\_packets\_rem"-global Variable is equal to zero and then the End-Of-Conversion-Interrupt is disabled again. The "data\_packets\_rem"-Variable is decremented every time Data is sent.
+
+\lstinputlisting[caption=Clock Setup,language=CLang,firstline=745,lastline=796]{../../main.c}
+
+\pagebreak

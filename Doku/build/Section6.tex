@@ -1,6 +1,7 @@
 \section{References}
 \label{sec:References}
 
+% --------------------------------------------------------------
 \subsection{Additional Links}
 
 \begin{itemize}
@@ -10,27 +11,205 @@
 	\item \href{http://osr507doc.sco.com/en/tools/ld_cmd_lang_sections.html#ld_cmd_lang_sections_grouping}{Linker Commands}
 \end{itemize}
 
+\pagebreak
 
+% --------------------------------------------------------------
+\subsection{STM32F030F4 Registers}
+
+\subsubsection{Clock Registers}
+\label{subsec:ClockReg}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ClockTree.jpg}
+	\caption{Clock Tree}
+	\label{fig:ClockTree}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ClockConfReg.jpg}
+	\caption{Clock Configuration Register}
+	\label{fig:ClockConfReg}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ClockControlReg.jpg}
+	\caption{Clock Control Register}
+	\label{fig:ClockControlReg}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ClockConf3Reg.jpg}
+	\caption{Clock Configuration Register 3}
+	\label{fig:ClockConf3Reg}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ClockAHBReg.jpg}
+	\caption{Clock ABH Register}
+	\label{fig:ClockAHBReg}
+\end{figure}
+
+\pagebreak
+
+% --------------------------------------------------------------
+\subsubsection{GPIO Registers}
+\label{subsec:GpioReg}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=\linewidth]{GPIOBlockDia.jpg}
+	\caption{GPIO Block Diagram}
+	\label{fig:GPIOBlockDia}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{GPIOModerOtyper.jpg}
+	\caption{GPIO MODER and OTYPER Register}
+	\label{fig:GPIOModerOtyper}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{GPIOAF.jpg}
+	\caption{GPIO Alternate Function Register}
+	\label{fig:GPIOAF}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{GPIOAAF.jpg}
+	\caption{GPIO Port A Alternate Functions}
+	\label{fig:GPIOAAF}
+\end{figure}
+
+\pagebreak
+
+% --------------------------------------------------------------
+\subsubsection{ADC}
+\label{subsec:AdcReg}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ADCBlockDia.jpg}
+	\caption{ADC Block Diagram}
+	\label{fig:ADCBlockDia}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ADC_CR.jpg}
+	\caption{ADC CR-Register}
+	\label{fig:ADC_CR}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ADC_CFGR2.jpg}
+	\caption{ADC Configuration Register 2}
+	\label{fig:ADC_CFGR2}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ADC_IER.jpg}
+	\caption{ADC Interrupt Enable Register}
+	\label{fig:ADC_IER}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{ADC_ISR.jpg}
+	\caption{ADC Interrupt Status Register}
+	\label{fig:ADC_ISR}
+\end{figure}
+
+\pagebreak
+
+% --------------------------------------------------------------
+\subsubsection{USART}
+\label{subsec:UsartReg}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USARTBlockDia.jpg}
+	\caption{USART Block Diagram}
+	\label{fig:USARTBlockDia}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USARTBRGen.jpg}
+	\caption{USART Baudrate Generation}
+	\label{fig:USARTBRGen}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USART_CR1.jpg}
+	\caption{USART Control Register 1}
+	\label{fig:USART_CR1}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USART_CR2.jpg}
+	\caption{USART Control Register 2}
+	\label{fig:USART_CR2}
+\end{figure}
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USART_CR3.jpg}
+	\caption{USART Control Register 3}
+	\label{fig:USART_CR3}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USART_RDR.jpg}
+	\caption{USART Read Data Register}
+	\label{fig:USART_RDR}
+\end{figure}
+
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{USART_TDR.jpg}
+	\caption{USART Transmit Data Register}
+	\label{fig:USART_TDR}
+\end{figure}
+
+\pagebreak
+
+% --------------------------------------------------------------
 \subsection{Vector Table}
 \label{fig:VecTab}
 
 Here you can see the full Vector Table from the \href{https://www.st.com/resource/en/reference_manual/dm00091010-stm32f030x4x6x8xc-and-stm32f070x6xb-advanced-armbased-32bit-mcus-stmicroelectronics.pdf}{STM32F030F4 Refence Manual}
 
-\begin{figure}
-	\includegraphics{VectorTable1.jpg}
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{VectorTable1.jpg}
 	\caption{First Part of the Vector Table}
 	\label{fig:VecTab1}
 \end{figure}
 
-\begin{figure}
-	\includegraphics{VectorTable2.jpg}
+\pagebreak
+
+\begin{figure}[hbt!]
+	\includegraphics[width=0.7\linewidth]{VectorTable2.jpg}
 	\caption{Second Part of the Vector Table}
 	\label{fig:VecTab2}
 \end{figure}
 
+\pagebreak
+
+% --------------------------------------------------------------
 \subsection{Complete Code}
 \label{subsec:CompCodeRef}
 
+% --------------------------------------------------------------
 \subsubsection{Linker Script}
 \label{subsec:LinkerRef}
 
@@ -38,6 +217,7 @@ Here you can see the full Vector Table from the \href{https://www.st.com/resourc
 
 \pagebreak
 
+% --------------------------------------------------------------
 \subsubsection{Assembler Script}
 \label{subsec:AssemblerRef}
 
@@ -45,6 +225,7 @@ Here you can see the full Vector Table from the \href{https://www.st.com/resourc
 
 \pagebreak
 
+% --------------------------------------------------------------
 \subsubsection{Header File}
 \label{subsec:HeaderRef}
 

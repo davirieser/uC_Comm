@@ -747,7 +747,7 @@ void ADC1_IRQHandler(){
     NO_INTERRUPTS();
 
     uint8_t * int_id = (uint8_t * )"ADC-INT\r\n";
-
+    // Indicate that the ADC triggered an Interrupt on the Terminal
     write_to_usart(int_id);
 
     uint32_t adc_ier = ADC_BASE_REG + ADC_IER;
@@ -757,7 +757,7 @@ void ADC1_IRQHandler(){
 
     uint32_t REG_CONTENT = READ_REG(adc_isr);
 
-    // ADC is ready
+    // ADC-Ready Interrupt ( cannot be cleared so check INT-Enable)
     if(((REG_CONTENT & ADC_ISR_ADRDY) == ADC_ISR_ADRDY) & (READ_BIT(adc_ier,0x01))){
         write_to_usart((uint8_t * ) "ADC-Initialization Complete\r\n");
         // Start Conversion
