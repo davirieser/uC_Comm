@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#include "src/usart.h"
+#include "src/helper.h"
+
 void dummy ( unsigned int );
 void INTERRUPTS ( void );
 void NO_INTERRUPTS ( void );
@@ -60,6 +63,27 @@ void NO_INTERRUPTS ( void );
     (int & 0x0F) <= 9) ? \
     ((int & 0x0F) + ASCII_START_NUMBERS) : \
     ((int & 0x0F) + ASCII_START_UPPERCASE - 10) \
+)
+
+#define DIVIDE_UNS(a,b) ( \
+    if (b != 0){ \
+        int ans = 0; \
+        while (a >= b) { \
+            a = a-b; \
+            ans++; \
+        } \
+        return ans; \
+    } \
+    return 0; \
+)
+
+#define MODULO_UNS(a,b) ( \
+    if (b != 0){ \
+        while (a >= b) { \
+            a = a-b; \
+        } \
+    } \
+    return a; \
 )
 
 #ifndef HIGH
@@ -311,16 +335,6 @@ uint32_t setup_user_led(void);
 void setup_interrupt(void);
 void write_to_user_led(uint32_t mode);
 uint32_t read_from_user_led(void);
-uint32_t read_from_usart(void);
-void write_to_usart(uint8_t * input);
-void write_arr_to_usart(uint32_t * input);
-void write_int_to_usart(int base, int reg);
-void write_int_bin_to_usart(uint32_t reg);
-void write_int_hex_to_usart(uint32_t reg);
-void write_bit_to_usart(uint32_t input);
-void write_string_to_usart_int(uint32_t size,uint8_t * buffer);
-void write_idle_frame(void);
-void wait_for_trans_complete(uint8_t clear_flag);
 void USART1_IRQHandler(void);
 void ADC1_IRQHandler();
 
@@ -358,3 +372,8 @@ void ADC1_IRQHandler();
     READ_REG(RCC_REGISTER_OFFSET + RCC_PERIPH_RESET); \
     CLEAR_BIT(RCC_REGISTER_OFFSET + RCC_PERIPH_RESET,1 << 14); \
 }
+
+struct div_result_struct{
+    uint32_t div;
+    uint32_t mod;
+};

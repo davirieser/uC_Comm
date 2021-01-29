@@ -13,7 +13,8 @@ endif
 AOPS = --warn -mcpu=cortex-m0
 COPS = -Wall -O2 -nostdlib -nostartfiles -ffreestanding
 
-DEST_FOLDER = src/
+DEST_FOLDER = target/
+SRC_DIR = src/
 
 # ------------------------------------------------------------------------------
 
@@ -26,7 +27,8 @@ program: $(BINARY_NAME)
 	$(PROGRAMMER) -c port=$(PORT) -w $(BINARY_NAME) 0x08000000
 
 # Compile Code into Binary
-main.bin : startup.ld $(DEST_FOLDER)startup.o  $(DEST_FOLDER)main.o
+main.bin : startup.ld $(DEST_FOLDER)startup.o  $(DEST_FOLDER)main.o \
+			$(patsubst $(SRC_DIR)%.c, $(DEST_FOLDER)%.o, $(wildcard $(SRC_DIR)*.c))
 	$(ARMGCC)-ld -o $(DEST_FOLDER)main.elf -T $^
 	$(ARMGCC)-objdump -D $(DEST_FOLDER)main.elf > $(DEST_FOLDER)main.list
 	$(ARMGCC)-objcopy $(DEST_FOLDER)main.elf $@ -O binary
@@ -36,6 +38,11 @@ main.bin : startup.ld $(DEST_FOLDER)startup.o  $(DEST_FOLDER)main.o
 $(DEST_FOLDER)%.o: %.c
 	@$(MAKE) -s check_dir
 	$(ARMGCC)-gcc $(COPS) -mthumb -mcpu=cortex-m0 -march=armv6-m -c $*.c -o $(DEST_FOLDER)$*.o
+
+# Default Rule for C-Files
+$(DEST_FOLDER)%.o: $(SRC_DIR)%.c
+	@$(MAKE) -s check_dir
+	$(ARMGCC)-gcc $(COPS) -mthumb -mcpu=cortex-m0 -march=armv6-m -c $(SRC_DIR)$*.c -o $(DEST_FOLDER)$*.o
 
 # ------------------------------------------------------------------------------
 
