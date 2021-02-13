@@ -1,24 +1,6 @@
 #include "main.h"
 
-uint8_t * write_buffer;
-uint32_t buffer_size;
-
 uint32_t data_packets_rem = 0;
-const struct PinDefinition led_pin = {.port=GPIO_A,.pin_number=4};
-const struct shift_reg sr = {
-    .rclk_port=GPIO_B,
-    .rclk_pin=1,
-    .data_port=GPIO_A,
-    .data_pin=5,
-    .sclk_port=GPIO_A,
-    .sclk_pin=6
-};
-// const struct tm1637 display = {
-//     .clk_port=GPIO_A,
-//     .clk_pin=3,
-//     .data_port=GPIO_A,
-//     .data_pin=2
-// };
 
 uint32_t not_main(void);
 
@@ -26,61 +8,15 @@ uint32_t not_main(void) {
 
     setup_registers();
 
-    uint32_t ra = 0;
-    uint32_t rb = 0;
-
-    struct PinConfig config = {
-        .otyper=GPIO_OTYPE_PUSH_PULL,
-        .moder=GPIO_MODE_GPIO,
-        .ospeedr=GPIO_SPEED_LOW,
-        .pupd=GPIO_PUPD_PULL_DOWN,
-        .alt_fun=0x00,
-        .lock=0x00
-    };
+    unsigned int ra = 0;
 
     // Wait For Interrupt in an endless Loop
     while(1) {
 
-        for (rb = 1; rb < 4; rb++) {
-
-            // Small Delay
-            for(ra=0;ra<42734;ra++) dummy(ra);
-            // Toggle User-LED
-            // write_to_user_led(~read_from_user_led());
-
-        }
-
-        // set_segments(display,segments,2);
-
-        // shift_out_clk(
-        //     (struct PinDefinition){
-        //         .port=display.data_port,
-        //         .pin_number=display.data_pin
-        //     },
-        //     (struct PinDefinition){
-        //         .port=display.clk_port,
-        //         .pin_number=display.clk_pin
-        //     },
-        //     0x88,
-        //     8,
-        //     _bitdelay
-        // );
-
-        // shift_out_clk(
-        //     (struct PinDefinition){
-        //         .port=display.data_port,
-        //         .pin_number=display.data_pin
-        //     },
-        //     (struct PinDefinition){
-        //         .port=display.clk_port,
-        //         .pin_number=display.clk_pin
-        //     },
-        //     rb,
-        //     0x08,
-        //     _bitdelay
-        // );
-        //
-        // rb++;
+        // Small Delay
+        for(ra=0;ra<412734;ra++) dummy(ra);
+        // Toggle User-LED
+        write_to_user_led(~read_from_user_led());
 
     }
 
@@ -93,7 +29,7 @@ void setup_registers(void) {
     NO_INTERRUPTS();
 
     setup_clock();
-    setup_pins();
+    setup_pins_main();
     setup_usart();
     setup_user_led();
     setup_interrupt();
@@ -105,50 +41,75 @@ void setup_registers(void) {
 
 }
 
-uint32_t setup_pins(void){
+uint32_t setup_pins_main(void){
 
-    // Setup USART-Pins
-    struct PinDefinition pins[] = {
-        {.port=GPIO_A,.pin_number=9},
-        {.port=GPIO_A,.pin_number=10},
-    };
-    struct PinConfig config = {
-        .otyper=GPIO_OTYPE_PUSH_PULL,
-        .moder=GPIO_MODE_ALT_FUN,
-        .ospeedr=GPIO_SPEED_LOW,
-        .pupd=GPIO_PUPD_NO_PUPD,
-        .alt_fun=GPIO_ALTERNATE_FUNCTION1,
-        .lock=0x00
-    };
-    setupPins(pins,config,2);
+    uint32_t outt_register = PORT_REGISTER + GPIO_OTYPER_REGISTER_OFFSET;
+    uint32_t pupd_register = PORT_REGISTER + GPIO_PUPDR_REGISTER_OFFSET;
+    uint32_t mode_register = PORT_REGISTER + GPIO_MODER_REGISTER_OFFSET;
+    uint32_t aflr_register = PORT_REGISTER + GPIO_AFRH_REGISTER_OFFSET;
+    uint32_t afhr_register = PORT_REGISTER + GPIO_AFRH_REGISTER_OFFSET;
+    uint32_t lock_register = PORT_REGISTER + GPIO_LCKR_REGISTER_OFFSET;
 
-    // setup_tm(display);
-    setup_shift_reg(sr);
+    uint32_t iLauf;
+    uint32_t pins[NUMBER_PINS] = PIN_NUMBERS;
 
-    // Setup PA0 to be Analog-Pin for ADC
-    struct PinDefinition pin = {.port=GPIO_A,.pin_number=0};
-    config = (struct PinConfig){
-        .otyper=0x00,
-        .moder=GPIO_MODE_ANALOG,
-        .ospeedr=0x00,
-        .pupd=0x00,
-        .alt_fun=0x00,
-        .lock=0x00
-    };
-    setupPin(pin,config);
+    // Lock Registers so they cannot be changed unless there is a Reset
+    uint32_t locked_registers = 0;
 
-    // LED is connected to PIN PA4 and to 3V3 via a Resistor
-    config = (struct PinConfig){
-        .otyper=GPIO_OTYPE_PUSH_PULL,
-        .moder=GPIO_MODE_GPIO,
-        .ospeedr=GPIO_SPEED_LOW,
-        .pupd=GPIO_PUPD_PULL_UP,
-        .alt_fun=0x00,
-        .lock=0x00
-    };
-    setupPin(led_pin,config);
+    // Create Bit-Mask to lock all the supplied Register
+    for (iLauf = 0;iLauf < NUMBER_PINS;iLauf ++) {
+        locked_registers += (1 << (pins[iLauf]));
+    }
 
-    return 0;
+    // Check that none of the Registers are locked
+    if ((READ_REG(lock_register) & locked_registers) == 0){
+
+        // Run through all the supplied Pins
+        for (iLauf = 0;iLauf < NUMBER_PINS;iLauf ++) {
+
+            // Check if the Pin is valid to avoid Overflow-Error / Writing to the other Registers
+            if ((pins[iLauf] < 16) & (pins[iLauf] >= 0)) {
+
+                // Change GPIO's Output Type to be Push-Pull
+                CLEAR_BIT(outt_register,0x3 << pins[iLauf]);
+
+                // Disable Pull-up and Pull-Down-Resistors
+                CLEAR_BIT(pupd_register,0x3 << (2 * pins[iLauf]));
+
+                // Change GPIO's into Alternate Function-Mode
+                CLEAR_BIT(mode_register,0x3 << (2 * pins[iLauf]));
+                SET_BIT(mode_register,0x2 << (2 * pins[iLauf]));
+
+                // Configure Alternate-Function
+                if (pins[iLauf] <= 7){
+                    // Write to the Alternate-Funtion-Low-Regiter if the Pin-Number is smaller or equal 7
+                    CLEAR_BIT(aflr_register,(0xF << (pins[iLauf]*4)));
+                    SET_BIT(aflr_register,(ALTERNATE_FUNCTION << (pins[iLauf]*4)));
+                }else if (pins[iLauf] <= 15){
+                    // Write to the Alternate-Funtion-High-Regiter if the Pin-Number is smaller or equal 15 ( to avoid Overflows)
+                    CLEAR_BIT(afhr_register,(0xF << ((pins[iLauf] - 8)*4)));
+                    SET_BIT(afhr_register,(ALTERNATE_FUNCTION << ((pins[iLauf] - 8)*4)));
+                }
+
+            }
+
+        }
+
+        // Lock Key Write Sequence according to manual
+        SET_BIT(lock_register,1 << 16); // Set the 16th Bit
+        CLEAR_BIT(lock_register,1 << 16); // Clear the 16th Bit
+        SET_BIT(lock_register,1 << 16); // Set the 16th Bit
+        if ((READ_REG(lock_register) >> 16) & 0x1) { // Then check if the 16th Bit is set
+            // Successeful
+            return 0;
+        }else{
+            // Lock Key Write Sequence aborted
+            return 1;
+        }
+
+    }
+
+    return 1;
 
 }
 
@@ -283,6 +244,9 @@ void setup_usart(void){
 
 void setup_adc() {
 
+    // Setup PA0 to be Analog-Pin
+    uint32_t mode_register = PORT_REGISTER + GPIO_MODER_REGISTER_OFFSET;
+
     // ADC-Configuration
     uint32_t adc_chselr = ADC_BASE_REG + ADC_CHSELR;
     uint32_t adc_cr = ADC_BASE_REG + ADC_CR;
@@ -349,7 +313,41 @@ void setup_adc() {
 
 uint32_t setup_user_led(void) {
 
-    return 0;
+    // LED is connected to PIN PA4 and to 3V3 via a Resistor
+
+    uint32_t led_mask = 1 << USER_LED_PIN_PORT;
+    uint32_t lock_register = REGISTER_GPIO_A_START + GPIO_LCKR_REGISTER_OFFSET;
+
+    // Check if the Port is already locked
+    if ((READ_REG(lock_register) & led_mask) == 0){
+
+        uint32_t pupd_register = REGISTER_GPIO_A_START + GPIO_PUPDR_REGISTER_OFFSET;
+        uint32_t mode_register = REGISTER_GPIO_A_START + GPIO_MODER_REGISTER_OFFSET;
+
+        // Configure Pin to be in General Purpose Output Mode
+        CLEAR_BIT(mode_register,0x00000300);
+        SET_BIT(mode_register,0x00000100);
+
+        // Configure Pin to be Pull-Up (Led is connected towards Ground)
+        CLEAR_BIT(pupd_register,0x00000300);
+        SET_BIT(pupd_register,0x00000100);
+
+        // Lock Key Write Sequence according to manual
+        SET_BIT(lock_register,1 << 16); // Set the 16th Bit
+        CLEAR_BIT(lock_register,1 << 16); // Clear the 16th Bit
+        SET_BIT(lock_register,1 << 16); // Set the 16th Bit
+        // Then check if the 16th Bit is set
+        if ((READ_REG(lock_register) >> 16) & 0x1) {
+            // Successeful
+            return 0;
+        }else{
+            // Lock Key Write Sequence aborted
+            return 1;
+        }
+
+    }else{
+        return 1;
+    }
 
 }
 
@@ -368,25 +366,28 @@ void setup_interrupt(void) {
 
 void write_to_user_led(uint32_t mode) {
 
-    // Write the Value negated because the LED is on when the Pin is low
-    // and off when the pin is high
-    write_to_pin(led_pin,(~mode) & 0x01);
+    // uint8_t * LED_ON = (uint8_t * )"Turning LED on\r\n";
+    // uint8_t * LED_OFF = (uint8_t *)"Turning LED off\r\n";
+
+    uint32_t led_register = REGISTER_GPIO_A_START + GPIO_ODR_REGISTER_OFFSET;
+
+    // Write the mode negated because the LED is on when the Pin is low and off when the pin is low
+    if (CHECK_BIT(mode,0) == 0x01){
+        // write_to_usart(LED_OFF);
+        CLEAR_BIT(led_register,1 << USER_LED_PIN_NUMBER);
+    }else{
+        // write_to_usart(LED_ON);
+        SET_BIT(led_register,1 << USER_LED_PIN_NUMBER);
+    }
 
 }
 
 uint32_t read_from_user_led(void) {
 
-    // Return bool is negated because the LED is on when the Pin is low
-    // and off when the pin is high
-    return (~read_from_pin(led_pin)) & 0x01;
+    uint32_t led_register = REGISTER_GPIO_A_START + GPIO_ODR_REGISTER_OFFSET;
 
-}
-
-void _bitdelay() {
-
-    uint32_t iLauf;
-
-    for(iLauf = 0; iLauf < 20000; iLauf ++) dummy(iLauf);
+    // Return bool is negated because the LED is on when the Pin is low and off when the pin is low
+    return (~((READ_REG(led_register) >> USER_LED_PIN_NUMBER) & 0x01));
 
 }
 
@@ -414,15 +415,9 @@ void USART1_IRQHandler(void) {
         // Clear RXNE-Bit
         int_register = read_from_usart();
 
-        write_to_shift_reg(sr,int_register,8);
-
-        write_int_bin_to_usart(int_register);
-        write_bit_to_usart(NEWLINE);
-        write_bit_to_usart(CARRIAGE_RT);
-
         // Increment Data-Packets to be sent and enable Interrupt
-        // data_packets_rem = DATA_PACKETS_PER_REQUEST;
-        // ENABLE_ADC_EOC_INT;
+        data_packets_rem = DATA_PACKETS_PER_REQUEST;
+        ENABLE_ADC_EOC_INT;
 
         // Could be included for Safety Purposes
         // Discards Read-Buffer and clears Interrupt-Flag
@@ -431,18 +426,18 @@ void USART1_IRQHandler(void) {
 
     }else if((int_register & USART_TRANS_REG_EMPTY) != 0){
 
-        if (buffer_size > 1){
-            write_bit_to_usart(write_buffer[buffer_size--]);
-        }else if(buffer_size == 0){
-            write_bit_to_usart(write_buffer[buffer_size--]);
-            ENABLE_TC_INT;
-            DISABLE_TXE_INT;
-            CLEAR_USART_TXE_FLAG;
-        }else{
-            DISABLE_TXE_INT;
-            ENABLE_TC_INT;
-            CLEAR_USART_TXE_FLAG;
-        }
+        // if (buffer_size > 1){
+        //     write_bit_to_usart(write_buffer[buffer_size--]);
+        // }else if(buffer_size == 0){
+        //     write_bit_to_usart(write_buffer[buffer_size--]);
+        //     ENABLE_TC_INT;
+        //     DISABLE_TXE_INT;
+        //     CLEAR_USART_TXE_FLAG;
+        // }else{
+        //     DISABLE_TXE_INT;
+        //     ENABLE_TC_INT;
+        //     CLEAR_USART_TXE_FLAG;
+        // }
 
     }else if((int_register & USART_TRANS_COMP) != 0) {
 

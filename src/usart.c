@@ -55,6 +55,91 @@ void write_to_usart(uint8_t * input) {
 
 }
 
+void set_terminal_color(const char * color) {
+
+    unsigned int ra = 0;
+
+    uint32_t usart_cr1 = USART_REGISTER + USART_CR1_OFFSET;
+    uint32_t usart_isr = USART_REGISTER + USART_ISR_OFFSET;
+    uint32_t usart_tdr = USART_REGISTER + USART_TDR_OFFSET;
+
+    // Check if the USART is enabled
+    if (READ_REG(usart_cr1) & 0x1){
+
+        // Set Color
+        // Loop over all characters until Terminator is encountered
+        while (color[ra] != 0x0) {
+            // Check if TXE-Bit is 1
+            // Otherwise the Write-Buffer is not ready to be written to
+            if (CHECK_BIT_MASK(READ_REG(usart_isr), USART_TRANS_REG_EMPTY)){
+                // Append the Character to the Output-Buffer
+                WRITE_REG(usart_tdr,color[ra]);
+                ra ++;
+            }
+        }
+    }
+
+    wait_for_trans_complete(0x1);
+
+
+}
+
+void write_to_usart_colored(const char * color, uint8_t * input) {
+
+    unsigned int ra = 0;
+
+    uint32_t usart_cr1 = USART_REGISTER + USART_CR1_OFFSET;
+    uint32_t usart_isr = USART_REGISTER + USART_ISR_OFFSET;
+    uint32_t usart_tdr = USART_REGISTER + USART_TDR_OFFSET;
+
+    // Check if the USART is enabled
+    if (READ_REG(usart_cr1) & 0x1){
+
+        // Set Color
+        // Loop over all characters until Terminator is encountered
+        while (input[ra] != 0x0) {
+            // Check if TXE-Bit is 1
+            // Otherwise the Write-Buffer is not ready to be written to
+            if (CHECK_BIT_MASK(READ_REG(usart_isr), USART_TRANS_REG_EMPTY)){
+                // Append the Character to the Output-Buffer
+                WRITE_REG(usart_tdr,color[ra]);
+                ra ++;
+            }
+        }
+
+        ra = 0;
+
+        // Loop over all characters until Zero is encountered
+        while (input[ra] != 0x0) {
+            // Check if TXE-Bit is 1
+            // Otherwise the Write-Buffer is not ready to be written to
+            if (CHECK_BIT_MASK(READ_REG(usart_isr), USART_TRANS_REG_EMPTY)){
+                // Append the Character to the Output-Buffer
+                WRITE_REG(usart_tdr,input[ra]);
+                ra ++;
+            }
+        }
+
+        ra = 0;
+
+        // Reset Terminal Color
+        // Loop over all characters until Terminator is encountered
+        while (RESET_FORE_COLOR[ra] != 0x0) {
+            // Check if TXE-Bit is 1
+            // Otherwise the Write-Buffer is not ready to be written to
+            if (CHECK_BIT_MASK(READ_REG(usart_isr), USART_TRANS_REG_EMPTY)){
+                // Append the Character to the Output-Buffer
+                WRITE_REG(usart_tdr,RESET_FORE_COLOR[ra]);
+                ra ++;
+            }
+        }
+
+    }
+
+    wait_for_trans_complete(0x1);
+
+}
+
 void write_arr_to_usart(uint32_t * input) {
 
     unsigned int ra = 0;
@@ -286,3 +371,7 @@ void wait_for_trans_complete(uint8_t clear_flag) {
     return;
 
 }
+
+// void reset_terminal(void) {
+//     set_terminal_color(RESET_TERMINAL);
+// }

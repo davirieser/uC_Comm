@@ -5,6 +5,10 @@
 
 #include "src/usart.h"
 #include "src/helper.h"
+#include "src/pins.h"
+#include "src/terminal.h"
+#include "src/tm1637.h"
+#include "src/shift_reg.h"
 
 void dummy ( unsigned int );
 void INTERRUPTS ( void );
@@ -14,14 +18,6 @@ void NO_INTERRUPTS ( void );
 // -----------------------------------------------------------------------------
 // Custom Defines --------------------------------------------------------------
 
-#define STATE_IDLE 0
-#define STATE_SENDING 1
-
-#define GPIO_A 0
-#define GPIO_B 1
-#define GPIO_C 2
-#define GPIO_D 3
-#define GPIO_F 4
 
 #define NUMBER_PINS 2
 #define PIN_NUMBERS {9,10}
@@ -49,6 +45,7 @@ void NO_INTERRUPTS ( void );
 
 #define SET_BIT(REG, BIT)     ((*(volatile uint32_t *)(REG)) |= (BIT))
 #define CLEAR_BIT(REG, BIT)   ((*(volatile uint32_t *)(REG)) &= ~(BIT))
+#define XOR_BIT(REG, BIT)     ((*(volatile uint32_t *)(REG)) ^= (BIT))
 #define READ_BIT(REG, BIT)    ((*(volatile uint32_t *)(REG)) & (BIT))
 #define WRITE_BIT(REG, BIT_POS, BIT_VAL) (BIT_VAL ? SET_BIT(REG, BIT_POS) : CLEAR_BIT(REG, BIT_POS))
 
@@ -59,31 +56,10 @@ void NO_INTERRUPTS ( void );
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define CHECK_BIT_MASK(var,comp) ((var & comp) == comp)
 
-#define INT_TO_HEX(int) (( \
-    (int & 0x0F) <= 9) ? \
-    ((int & 0x0F) + ASCII_START_NUMBERS) : \
-    ((int & 0x0F) + ASCII_START_UPPERCASE - 10) \
-)
-
-#define DIVIDE_UNS(a,b) ( \
-    if (b != 0){ \
-        int ans = 0; \
-        while (a >= b) { \
-            a = a-b; \
-            ans++; \
-        } \
-        return ans; \
-    } \
-    return 0; \
-)
-
-#define MODULO_UNS(a,b) ( \
-    if (b != 0){ \
-        while (a >= b) { \
-            a = a-b; \
-        } \
-    } \
-    return a; \
+#define INT_TO_HEX(x) (( \
+    (x & 0x0F) <= 9) ? \
+    ((x & 0x0F) + ASCII_START_NUMBERS) : \
+    ((x & 0x0F) + ASCII_START_UPPERCASE - 10) \
 )
 
 #ifndef HIGH
@@ -154,24 +130,6 @@ void NO_INTERRUPTS ( void );
 #define ADC_ISR_ADRDY   0x00000001        //ADC Ready
 
 // -----------------------------------------------------------------------------
-// Port Register Definitions
-
-#if PORT_IDENTIFIER == GPIO_A
-    #define PORT_REGISTER REGISTER_GPIO_A_START
-#elif PORT_IDENTIFIER == GPIO_B
-    #define PORT_REGISTER REGISTER_GPIO_B_START
-#elif PORT_IDENTIFIER == GPIO_C
-    #define PORT_REGISTER REGISTER_GPIO_C_START
-#elif PORT_IDENTIFIER == GPIO_D
-    #define PORT_REGISTER REGISTER_GPIO_D_START
-#elif PORT_IDENTIFIER == GPIO_F
-    #define PORT_REGISTER REGISTER_GPIO_F_START
-#else
-    // Use Ports A as default
-    #define PORT_REGISTER REGISTER_GPIO_A_START
-#endif
-
-// -----------------------------------------------------------------------------
 // USART Register Definitions
 
 #if USART_NUMBER == 1
@@ -221,21 +179,6 @@ void NO_INTERRUPTS ( void );
 #define USART_5_INTERRUPT_OFFSET 0x000000B4
 #define USART_6_INTERRUPT_OFFSET 0x000000B4
 
-// -----------------------------------------------------------------------------
-// GPIO Register Addresses
-
-#define GPIO_MODER_REGISTER_OFFSET 0x00000000 // GPIO port mode register
-#define GPIO_OTYPER_REGISTER_OFFSET 0x00000004 // GPIO port output type register
-#define GPIO_OSPEEDR_REGISTER_OFFSET 0x00000008 // GPIO port output speed register
-#define GPIO_PUPDR_REGISTER_OFFSET 0x0000000C // GPIO port pull-up/pull-down register
-#define GPIO_IDR_REGISTER_OFFSET 0x00000010 // GPIO port input data register
-#define GPIO_ODR_REGISTER_OFFSET 0x00000014 // GPIO port output data register
-#define GPIO_BSRR_REGISTER_OFFSET 0x00000018 // GPIO port bit set/reset register
-#define GPIO_LCKR_REGISTER_OFFSET 0x0000001C // GPIO port configuration lock register
-#define GPIO_AFLR_REGISTER_OFFSET 0x00000020 // GPIO alternate function low register
-#define GPIO_AFRH_REGISTER_OFFSET 0x00000024 // GPIO alternate function high register
-#define GPIO_BRR_REGISTER_OFFSET 0x00000028 // GPIO port bit reset register
-
 // Interrupt-Bitmasks ----------------------------------------------------------
 
 #define USART_PARITY_ERROR 0x00000001       // Parity Error
@@ -282,22 +225,6 @@ void NO_INTERRUPTS ( void );
 #define APB2_MEMORY_START 0x40010000
 #define APB2_MEMORY_END 0x40018000
 
-// Port-Register ---------------------------------------------------------------
-
-#define REGISTER_GPIO_A_START 0x48000000
-#define REGISTER_GPIO_A_END 0x4800003F
-
-#define REGISTER_GPIO_B_START 0x48000400
-#define REGISTER_GPIO_B_END 0x4800007F
-
-#define REGISTER_GPIO_C_START 0x48000800
-#define REGISTER_GPIO_C_END 0x48000BFF
-
-#define REGISTER_GPIO_D_START 0x48000C00
-#define REGISTER_GPIO_D_END 0x480000FF
-
-#define REGISTER_GPIO_F_START 0x48001400
-#define REGISTER_GPIO_F_END 0x4800017F
 
 // USART-Register --------------------------------------------------------------
 
@@ -337,43 +264,4 @@ void write_to_user_led(uint32_t mode);
 uint32_t read_from_user_led(void);
 void USART1_IRQHandler(void);
 void ADC1_IRQHandler();
-
-// -----------------------------------------------------------------------------
-
-#define ENABLE_USART SET_BIT(USART_REGISTER + USART_CR1_OFFSET,0x01);
-#define DISABLE_USART CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,0x01);
-
-#define ENABLE_USART_TRANS SET_BIT(USART_REGISTER + USART_CR1_OFFSET,0x08)
-#define DISABLE_USART_TRANS CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,0x08)
-#define ENABLE_USART_RECV SET_BIT(USART_REGISTER + USART_CR1_OFFSET,0x04)
-#define DISABLE_USART_RECV CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,0x04)
-
-#define CLEAR_USART_TC_FLAG SET_BIT(USART_REGISTER + USART_ICR_OFFSET,USART_TRANS_COMP);
-#define CLEAR_USART_TXE_FLAG SET_BIT(USART_REGISTER + USART_ICR_OFFSET,USART_TRANS_REG_EMPTY);
-#define CLEAR_USART_RXNE_FLAG SET_BIT(USART_REGISTER + USART_ICR_OFFSET,USART_READ_DATA_NE);
-#define CLEAR_USART_FLAGS SET_BIT(USART_REGISTER + USART_ICR_OFFSET,USART_ALL_FLAGS);
-
-#define ENABLE_TC_INT SET_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_TRANS_COMP);
-#define DISABLE_TC_INT CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_TRANS_COMP);
-#define ENABLE_RXNE_INT SET_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_READ_DATA_NE);
-#define DISABLE_RXNE_INT CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_READ_DATA_NE);
-#define ENABLE_TXE_INT SET_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_TRANS_REG_EMPTY);
-#define DISABLE_TXE_INT CLEAR_BIT(USART_REGISTER + USART_CR1_OFFSET,USART_TRANS_REG_EMPTY);
-
-#define ENABLE_ADC_READY_INT SET_BIT(ADC_BASE_REG + ADC_IER,0x01)
-#define DISABLE_ADC_READY_INT CLEAR_BIT(ADC_BASE_REG + ADC_IER,0x01)
-#define ENABLE_ADC_EOC_INT SET_BIT(ADC_BASE_REG + ADC_IER,0x04)
-#define DISABLE_ADC_EOC_INT CLEAR_BIT(ADC_BASE_REG + ADC_IER,0x04)
-
-#define USART_FLUSH_READ_REG SET_BIT(USART_REGISTER + USART_RQR_OFFSET,0x08)
-
-#define RESET_USART() { \
-    SET_BIT(RCC_REGISTER_OFFSET + RCC_PERIPH_RESET,1 << 14); \
-    READ_REG(RCC_REGISTER_OFFSET + RCC_PERIPH_RESET); \
-    CLEAR_BIT(RCC_REGISTER_OFFSET + RCC_PERIPH_RESET,1 << 14); \
-}
-
-struct div_result_struct{
-    uint32_t div;
-    uint32_t mod;
-};
+void _bitdelay();
